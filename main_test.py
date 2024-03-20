@@ -12,20 +12,20 @@ c = conn.cursor()
 
 # Security Functions
 def make_hashes(password):
-	return hashlib.sha256(str.encode(password)).hexdigest()
+    return hashlib.sha256(str.encode(password)).hexdigest()
 
 def check_hashes(password,hashed_text):
-	if make_hashes(password) == hashed_text:
-		return hashed_text
-	return False
+    if make_hashes(password) == hashed_text:
+        return hashed_text
+    return False
 
 # DB  Functions
 def create_usertable():
-	c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT, api_key STRING)')
+    c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT, api_key STRING)')
 
 def add_userdata(username, password, api_key):
-	c.execute('INSERT INTO userstable(username,password,api_key) VALUES (?,?,?)',(username,password,api_key))
-	conn.commit()
+    c.execute('INSERT INTO userstable(username,password,api_key) VALUES (?,?,?)',(username,password,api_key))
+    conn.commit()
 
 def login_user(username,password):
     c.execute('SELECT * FROM userstable WHERE username =? AND password = ?',(username,password))
@@ -33,11 +33,20 @@ def login_user(username,password):
     return data
 
 def update_k(username, password, api_key):
-     c.execute('UPDATE userstable SET api_key = ? WHERE username =? AND password = ?',(api_key, username, password))
-     conn.commit()
+    c.execute('UPDATE userstable SET api_key = ? WHERE username =? AND password = ?',(api_key, username, password))
+    conn.commit()
 
 def clear_session():
     st.session_state.clear()
+
+def save_chat_history(username, messages):
+    # Create a folder if it doesn't exist
+    if not os.path.exists('history'):
+        os.makedirs('history')
+    # Write chat history to a file
+    with open(f'history/{username}_chat_history.txt', 'a+') as file:
+        for msg in messages:
+            file.write(msg.content + '\n')
 
 def init():
     st.set_page_config(
@@ -52,7 +61,6 @@ def main():
     choice = st.sidebar.selectbox("Menu",menu)
 
     if choice == "Login":
-        st.cache_resource.clear()
         st.sidebar.title("LOGIN")
         username = st.sidebar.text_input("User Name")
         password = st.sidebar.text_input("Password",type='password')
@@ -63,6 +71,7 @@ def main():
             result = login_user(username, make_hashes(password))
 
             if result:
+                st.session_state.clear()
                 st.sidebar.success("Logged In as {}".format(username))
                 try:
                     os.environ["GROQ_API_KEY"] = result[0][2]
@@ -92,9 +101,7 @@ def main():
 
                     st.session_state.messages.append(AIMessage(content=response.content))
 
-                    with open("indi_chat.txt", "a+") as file:
-                        file.write(f"User: {str(user_input)}\n")
-                        file.write(f"AI: {str(response.content)}\n")
+                    save_chat_history(username, st.session_state.messages)  # Save chat history
 
                 messages = st.session_state.get('messages', [])
                 for i, msg in enumerate(messages[1:]):
@@ -103,8 +110,6 @@ def main():
                     else:
                         message(msg.content, is_user=False, key=str(i) + '_ai')
 
-
-            
     elif choice == "SignUp":
         st.subheader("Create New Account")
         new_user = st.text_input("Username")
