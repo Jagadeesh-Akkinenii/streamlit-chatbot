@@ -12,55 +12,32 @@ c = conn.cursor()
 
 # Security Functions
 def make_hashes(password):
-	return hashlib.sha256(str.encode(password)).hexdigest()
+    return hashlib.sha256(str.encode(password)).hexdigest()
 
-def check_hashes(password,hashed_text):
-	if make_hashes(password) == hashed_text:
-		return hashed_text
-	return False
+def check_hashes(password, hashed_text):
+    if make_hashes(password) == hashed_text:
+        return hashed_text
+    return False
 
 # DB  Functions
 def create_usertable():
-	c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT, api_key STRING)')
+    c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT,password TEXT, api_key STRING)')
 
 def add_userdata(username, password, api_key):
-	c.execute('INSERT INTO userstable(username,password,api_key) VALUES (?,?,?)',(username,password,api_key))
-	conn.commit()
+    c.execute('INSERT INTO userstable(username,password,api_key) VALUES (?,?,?)',(username,password,api_key))
+    conn.commit()
 
-def login_user(username,password):
+def login_user(username, password):
     c.execute('SELECT * FROM userstable WHERE username =? AND password = ?',(username,password))
     data = c.fetchall()
     return data
 
 def update_k(username, password, api_key):
-     c.execute('UPDATE userstable SET api_key = ? WHERE username =? AND password = ?',(api_key, username, password))
-     conn.commit()
+    c.execute('UPDATE userstable SET api_key = ? WHERE username =? AND password = ?',(api_key, username, password))
+    conn.commit()
 
 def clear_session():
     st.session_state.clear()
-
-def save_chat_history(username, messages):
-    # Create a folder if it doesn't exist
-    if not os.path.exists('history'):
-        os.makedirs('history')
-    # Write chat history to a file
-    with open(f'history/{username}_chat_history.txt', 'a+') as file:
-        for msg in messages:
-            file.write(msg.content + '\n')
-
-def save_chat_history(username, messages):
-    # Create a folder if it doesn't exist
-    if not os.path.exists('history'):
-        os.makedirs('history')
-    # Write chat history to a file
-    with open(f'history/{username}_chat_history.txt', 'a+') as file:
-        for msg in messages:
-            if isinstance(msg, SystemMessage):
-                file.write(f"System: {msg.content}\n")
-            elif isinstance(msg, HumanMessage):
-                file.write(f"user: {msg.content}\n")
-            elif isinstance(msg, AIMessage):
-                file.write(f"AI: {msg.content}\n")
 
 def init():
     st.set_page_config(
@@ -108,22 +85,37 @@ def main():
                 user_input = st.chat_input("Your message:", key="user_input")
 
                 if user_input:
-                    st.session_state.messages.append(HumanMessage(content=user_input))
+                    new_message = HumanMessage(content=user_input)
+                    st.session_state.messages.append(new_message)
 
                     with st.spinner("Thinking...."):
                         response = chat(st.session_state.messages)
 
-                    st.session_state.messages.append(AIMessage(content=response.content))
+                    new_response = AIMessage(content=response.content)
+                    st.session_state.messages.append(new_response)
 
-                    save_chat_history(username, st.session_state.messages)  # Save chat history
+                    # Save chat history
+                    # Create a folder if it doesn't exist
+                    if not os.path.exists('history'):
+                        os.makedirs('history')
+                    # Write chat history to a file
+                    with open(f'history/{username}_chat_history.txt', 'a+', encoding='utf-8') as file:
+                        # Append only new messages to the existing file
+                        for msg in [new_message, new_response]:
+                            if isinstance(msg, SystemMessage):
+                                file.write(f"System: {msg.content}\n")
+                            elif isinstance(msg, HumanMessage):
+                                file.write(f"user: {msg.content}\n")
+                            elif isinstance(msg, AIMessage):
+                                file.write(f"AI: {msg.content}\n")
 
-                messages = st.session_state.get('messages', [])
-                for i, msg in enumerate(messages[1:]):
-                    if i % 2 == 0:
-                        message(msg.content, is_user=True, key=str(i) + '_user')
-                    else:
-                        message(msg.content, is_user=False, key=str(i) + '_ai')
-            
+                    messages = st.session_state.get('messages', [])
+                    for i, msg in enumerate(messages[1:]):
+                        if i % 2 == 0:
+                            message(msg.content, is_user=True, key=str(i) + '_user')
+                        else:
+                            message(msg.content, is_user=False, key=str(i) + '_ai')
+
             else:
                  st.error("Invalid credentials, please re-enter correct login details.")
 
@@ -132,11 +124,11 @@ def main():
         st.subheader("Create New Account")
         new_user = st.text_input("Username")
         new_password = st.text_input("Password",type='password')
-        new_api_key = st.text_input("API KEY", type = 'password')
+        new_api_key = st.text_input("GROQ API KEY", type='password')
 
         if st.button("Signup"):
             create_usertable()
-            add_userdata(new_user,make_hashes(new_password),new_api_key)
+            add_userdata(new_user, make_hashes(new_password), new_api_key)
             st.success("You have successfully created a valid Account")
             st.info("Go to Login Menu to login")
     
@@ -144,7 +136,7 @@ def main():
         st.subheader("SET OR DELETE API")
         existing_user = st.text_input("Username")
         existing_password = st.text_input("Password",type='password')
-        existing_api_key = st.text_input("API KEY", type = 'password')
+        existing_api_key = st.text_input("API KEY", type='password')
 
         if st.button("Update"):
             update_k(existing_user, make_hashes(existing_password), existing_api_key)
