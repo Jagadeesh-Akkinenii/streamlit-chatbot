@@ -11,9 +11,9 @@ There are three options(tabs) to select in this app,
 
 ### 1. SignUp
 To utilize this chatbot, the user must first register for an account. This section requires three pieces of information:
-* Username
-* Password
-* GROQ API Key
+* <b>Username</b>
+* <b>Password</b>
+* <b>GROQ API Key</b>
 
 ### 2. Login
 Once the user has created an account, they can log in by entering their credentials on the sidebar and checking the login checkbox. If incorrect credentials are provided, an error message will prompt the user to try again. If the provided credentials are correct and a valid API key is provided, the user can access the chatbot without any issues. To start a fresh conversation, users can find a "Clear Cache" button in the sidebar, allowing them to reset the conversation.
@@ -21,7 +21,7 @@ Once the user has created an account, they can log in by entering their credenti
 ### 3. Set API
 In this tab, users can update or clear their API key. To clear the API key, users need to provide their username and password and click "Clear API". If the provided credentials are correct, the API key will be removed from the database.
 
-###PROS
+### PROS
 1. The data is stored in a database using SQLite3.
 2. The passwords are hashed to provide security.
 3. API keys can't be hashed because hashing is a one way process.
@@ -30,7 +30,7 @@ In this tab, users can update or clear their API key. To clear the API key, user
 6. We can clear the cache using "Clear Cache" button to start a
    fresh conversation.
 
-###CONS
+### CONS
 1. No option to reset the password.
 2. No option to delete an account.
 3. Only way to remove an account is to delete the entire deployed app.
@@ -39,7 +39,7 @@ In this tab, users can update or clear their API key. To clear the API key, user
 5. No option to delete the individual chat history or the entire
    chat history at all, similar to account issue.
 
-###THOUGHTS
+### THOUGHTS
 1. Can improve the UI but I believe its not necessary.
 2. Possible to integrate with Sanket's code to create RAG or to load
    previous chat history to resume where we left off.
