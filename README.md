@@ -41,7 +41,7 @@ In this tab, users can update or clear their API key. To clear the API key, user
 
 ### THOUGHTS
 1. Can improve the UI but I believe its not necessary.
-2. Possible to integrate with Sanket's code to create RAG or to load
+2. Possible to integrate RAG or to load
    previous chat history to resume where we left off.
 
 #### Contributors
